@@ -5,9 +5,11 @@ export const ICON_NAMES = {
   COOKIE: "cookie",
   NOTE: "note",
   CAR: "car",
+  INFO: "info",
+  CROSS: "cross",
 } as const;
 
-type IconName = (typeof ICON_NAMES)[keyof typeof ICON_NAMES];
+export type IconName = (typeof ICON_NAMES)[keyof typeof ICON_NAMES];
 
 export interface ModalProps {
   title: string;
@@ -18,4 +20,8 @@ export interface ModalProps {
   onClose: () => void;
   onConfirm: () => void;
   children: ReactNode;
+
+  confirmText?: string;
+  cancelText?: string;
+  showCancel?: boolean;
 }

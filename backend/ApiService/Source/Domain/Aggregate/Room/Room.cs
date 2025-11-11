@@ -6,6 +6,8 @@ using Epam.ItMarathon.ApiService.Domain.Shared.ValidationErrors;
 using FluentValidation;
 using FluentValidation.Internal;
 using FluentValidation.Results;
+using System.Linq;
+using FluentValidation.Results;
 
 namespace Epam.ItMarathon.ApiService.Domain.Aggregate.Room
 {
@@ -293,6 +295,28 @@ namespace Epam.ItMarathon.ApiService.Domain.Aggregate.Room
             return this;
         }
 
+        public Result<Room, ValidationResult> Reopen()
+        {
+            // Комната должна быть закрыта, иначе нет смысла "открывать"
+            if (ClosedOn is null)
+            {
+                return Result.Failure<Room, ValidationResult>(new BadRequestError([
+                    new ValidationFailure("room.ClosedOn", "Room is not closed.")
+                ]));
+            }
+
+            // Сбрасываем результаты жеребьёвки — убираем назначения
+            foreach (var u in Users)
+            {
+                u.GiftRecipientUserId = null;
+            }
+
+            // Переводим комнату в редактируемое состояние
+            ClosedOn = null;
+
+            return this;
+        }
+
         private Result<bool, ValidationResult> CheckRoomCanBeModified()
         {
             if (ClosedOn is not null)
@@ -327,6 +351,38 @@ namespace Epam.ItMarathon.ApiService.Domain.Aggregate.Room
             // Call a RoomValidator to validate updated property
             return ValidateProperty(char.ToLowerInvariant(propertyName[0]) + propertyName[1..]);
         }
+
+        public Result<Room, ValidationResult> DeleteUser(ulong userId)
+{
+    // 1) Комната доступна для изменений?
+    var roomCanBeModifiedResult = CheckRoomCanBeModified();
+    if (roomCanBeModifiedResult.IsFailure)
+    {
+        return Result.Failure<Room, ValidationResult>(roomCanBeModifiedResult.Error);
+    }
+
+    // 2) Ищем пользователя
+    var userToDelete = Users.FirstOrDefault(user => user.Id == userId);
+    if (userToDelete is null)
+    {
+        var failures = new List<ValidationFailure>
+        {
+            new ValidationFailure("userId", "User with the specified Id was not found in the room.")
+        };
+
+        // Если у тебя ошибка именно ValidationResult:
+        return Result.Failure<Room, ValidationResult>(new ValidationResult(failures));
+
+        // Если у тебя есть своя обёртка NotFoundError вокруг ValidationResult — используй так:
+        // return Result.Failure<Room, ValidationResult>(new NotFoundError(new ValidationResult(failures)));
+        }
+
+            // 3) Удаляем и возвращаем текущую комнату
+            Users.Remove(userToDelete);
+            return Result.Success<Room, ValidationResult>(this);
+        }
+
+
 
         private Result<Room, ValidationResult> ValidateProperty(string propertyName)
         {

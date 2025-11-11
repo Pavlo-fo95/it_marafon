@@ -1,5 +1,7 @@
 ﻿using Epam.ItMarathon.ApiService.Domain.Abstract;
 using Epam.ItMarathon.ApiService.Domain.ValueObjects.Wish;
+using CSharpFunctionalExtensions;
+using FluentValidation.Results;
 
 namespace Epam.ItMarathon.ApiService.Domain.Entities.User
 {
@@ -119,6 +121,46 @@ namespace Epam.ItMarathon.ApiService.Domain.Entities.User
         public void PromoteToAdmin()
         {
             IsAdmin = true;
+        }
+        /// <summary>
+        /// Updates user's editable fields.
+        /// </summary>
+        public Result<User, ValidationResult> Update(
+            string? firstName,
+            string? lastName,
+            string? email,
+            string? phone,
+            string? deliveryInfo,
+            string? interests,
+            bool? wantSurprise)
+        {
+            var failures = new List<ValidationFailure>();
+
+            // Валидация (можно потом заменить на отдельный UserValidator)
+            if (firstName is { Length: > 40 })
+                failures.Add(new ValidationFailure(nameof(firstName), "First name too long."));
+            if (lastName is { Length: > 40 })
+                failures.Add(new ValidationFailure(nameof(lastName), "Last name too long."));
+            if (deliveryInfo is { Length: > 500 })
+                failures.Add(new ValidationFailure(nameof(deliveryInfo), "Delivery info too long."));
+            if (interests is { Length: > 1000 })
+                failures.Add(new ValidationFailure(nameof(interests), "Interests too long."));
+
+            if (failures.Any())
+                return Result.Failure<User, ValidationResult>(new ValidationResult(failures));
+
+            // Обновляем только те поля, что реально пришли
+            if (firstName is not null) FirstName = firstName;
+            if (lastName is not null) LastName = lastName;
+            if (email is not null) Email = email;
+            if (phone is not null) Phone = phone;
+            if (deliveryInfo is not null) DeliveryInfo = deliveryInfo;
+            if (interests is not null) Interests = interests;
+            if (wantSurprise.HasValue) WantSurprise = wantSurprise.Value;
+
+            ModifiedOn = DateTime.UtcNow;
+
+            return this;
         }
     }
 }

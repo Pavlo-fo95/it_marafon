@@ -19,12 +19,13 @@ const ParticipantDetailsModal = ({
       <PersonalInformation
         firstName={personalInfoData.firstName}
         lastName={personalInfoData.lastName}
-        email={personalInfoData.email}
-        deliveryInfo={personalInfoData.deliveryInfo}
         phone={personalInfoData.phone}
-        link={personalInfoData.link}
+        email={personalInfoData.email ?? ""}
+        deliveryInfo={personalInfoData.deliveryInfo}
+        withoutHeader
       />
     </Modal>
   );
 };
+
 export default ParticipantDetailsModal;

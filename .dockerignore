@@ -1,0 +1,10 @@
+.git
+**/bin
+**/obj
+frontend/
+node_modules/
+*.log
+.vscode/
+.idea/
+terraform/
+aws_keys/

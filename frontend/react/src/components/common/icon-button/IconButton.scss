@@ -4,6 +4,9 @@
   border: none;
   background: transparent;
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 
   &--green,
   &--white {
@@ -11,48 +14,42 @@
       outline: 1px solid colors.$orange-500;
       border-radius: 2px;
     }
-
     &:disabled {
       cursor: default;
     }
   }
 
   &--green {
-    fill: colors.$green-500;
-
+    color: colors.$green-500;
     &:hover,
     &:focus-visible {
-      fill: colors.$green-400;
+      color: colors.$green-400;
     }
-
     &:active {
-      fill: colors.$green-700;
+      color: colors.$green-700;
     }
-
     &:disabled {
-      fill: colors.$g-600;
+      color: colors.$g-600;
     }
   }
 
   &--white {
-    fill: colors.$g-100;
-
+    color: colors.$g-100;
     &:hover,
     &:focus-visible {
-      fill: colors.$g-50;
+      color: colors.$g-50;
     }
-
     &:active {
-      fill: colors.$g-100;
+      color: colors.$g-100;
     }
-
     &:disabled {
-      fill: colors.$g-600;
+      color: colors.$g-600;
     }
   }
 
   &__icon {
     width: 24px;
     height: 24px;
+    fill: currentColor;
   }
 }

@@ -2,6 +2,14 @@
 @use "@assets/styles/_variables";
 @use "@assets/styles/_extends";
 
+.modal__actions {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 24px;
+  flex-wrap: wrap;
+}
+
 .modal {
   position: relative;
   width: 792px;

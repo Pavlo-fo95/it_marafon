@@ -18,7 +18,6 @@ const Modal = ({
 }: ModalProps) => {
   useEffect(() => {
     document.body.style.overflow = isOpen ? "hidden" : "";
-
     return () => {
       document.body.style.overflow = "";
     };
@@ -37,14 +36,25 @@ const Modal = ({
           ) : null}
         </div>
 
+        {/* кнопка закрытия */}
         <div className="modal__close-button">
           <IconButton iconName="cross" onClick={onClose} />
         </div>
 
+        {/* контент модалки */}
         {children}
 
-        <div className="modal__back-button">
-          <Button size="medium" width={225} onClick={onConfirm}>
+        {/* кнопки действий */}
+        <div className="modal__actions">
+          <Button
+            size="medium"
+            variant="danger"
+            width={180}
+            onClick={onConfirm}
+          >
+            Delete
+          </Button>
+          <Button size="medium" width={225} onClick={onClose}>
             Go Back to Room
           </Button>
         </div>

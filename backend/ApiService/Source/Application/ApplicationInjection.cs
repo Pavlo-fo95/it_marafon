@@ -1,22 +1,22 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
+using FluentValidation;
+using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Epam.ItMarathon.ApiService.Application
 {
-    /// <summary>
-    /// Application layer injection and setup static class.
-    /// </summary>
     [ExcludeFromCodeCoverage]
     public static class ApplicationInjection
     {
-        /// <summary>
-        /// Extension method for more fluent setup. This is where all required configuration for Application layer happens.
-        /// </summary>
         public static void InjectApplicationLayer(this IServiceCollection services)
         {
-            services.AddMediatR(configuration =>
-                configuration.RegisterServicesFromAssemblies(Assembly.GetExecutingAssembly()));
+            // Подключаем все MediatR-хендлеры
+            services.AddMediatR(cfg =>
+                cfg.RegisterServicesFromAssemblies(Assembly.GetExecutingAssembly()));
+
+            // Подключаем все FluentValidation-валидаторы из этой сборки
+            services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
         }
     }
 }

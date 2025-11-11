@@ -1,18 +1,31 @@
 using Epam.ItMarathon.ApiService.Api.Extension;
+using Epam.ItMarathon.ApiService.Application;
 using Serilog;
-
-var builder = WebApplication
-    .CreateBuilder(args)
-    .ConfigureApplicationBuilder();
-
-var app = builder
-    .Build()
-    .ConfigureApplication();
 
 try
 {
-    Log.Information("Starting host");
+    var builder = WebApplication
+        .CreateBuilder(args)
+        .ConfigureApplicationBuilder();
+
+    // Подключаем Application слой (MediatR + FluentValidation)
+    builder.Services.InjectApplicationLayer();
+
+    var app = builder
+        .Build()
+        .ConfigureApplication();
+
+    // В продакшне включаем редирект на HTTPS
+    if (!app.Environment.IsDevelopment())
+    {
+        // Если UseHttpsRedirection уже вызывается внутри ConfigureApplication(),
+        // этот блок можно удалить, чтобы не было дубля.
+        app.UseHttpsRedirection();
+    }
+
+    Log.Information("Starting host...");
     app.Run();
+
     return 0;
 }
 catch (Exception ex)

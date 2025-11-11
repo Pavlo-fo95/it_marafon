@@ -3,26 +3,24 @@ import "./Button.scss";
 
 const Button = ({
   variant = "primary",
-  size = "large",
-  iconName,
+  size = "medium",
   width,
-  children,
-  ...restProps
+  className = "",
+  ...rest
 }: ButtonProps) => {
-  const buttonClassName = [
-    "button",
-    `button--${variant}`,
-    `button--${size}`,
-    iconName && `button--icon-${iconName}`,
-    variant === "secondary" && size === "small" && "button--secondary-small",
-  ]
-    .filter(Boolean)
-    .join(" ");
+  const style = width ? { width } : undefined;
 
   return (
-    <button className={buttonClassName} style={{ width }} {...restProps}>
-      {children}
-    </button>
+    <button
+      className={[
+        "button",
+        `button--${variant}`,
+        `button--${size}`,
+        className,
+      ].join(" ")}
+      style={style}
+      {...rest}
+    />
   );
 };
 

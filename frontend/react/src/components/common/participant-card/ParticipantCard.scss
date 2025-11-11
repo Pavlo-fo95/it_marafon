@@ -1,5 +1,5 @@
 @use "@assets/styles/_extends";
-@use "@assets/styles/_colors";
+@use "@assets/styles/_colors" as colors;
 
 .participant-card-info-container {
   display: flex;
@@ -21,8 +21,39 @@
     }
   }
 }
+.participant-card-icons {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+
+  > * {
+    position: relative;
+  }
+  > * + *::before {
+    content: "";
+    position: absolute;
+    left: -7px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 1px;
+    height: 28px;
+    background-color: colors.$g-200;
+  }
+}
+
+.participant-card-divider {
+  width: 1px;
+  height: 28px;
+  background-color: colors.$g-200;
+}
 
 .participant-card-role {
   @extend %label;
   color: colors.$g-800;
+}
+
+.participant-card-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }

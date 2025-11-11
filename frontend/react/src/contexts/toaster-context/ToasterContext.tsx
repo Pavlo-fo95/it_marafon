@@ -8,9 +8,11 @@ const ToasterContext = createContext<ToasterContextValue | null>(null);
 export const ToasterProvider = ({ children }: { children: ReactNode }) => {
   const toaster = useRef<ToasterHandler>(null);
 
-  const showToast: ToasterContextValue["showToast"] = (message, type, size) => {
-    toaster.current?.show(message, type, size);
+  const showToast: ToasterContextValue["showToast"] = (...args) => {
+    // args: Parameters<ToasterHandler['show']>
+    toaster.current?.show(...args);
   };
+
   const closeToast: ToasterContextValue["closeToast"] = () => {
     toaster.current?.close();
   };

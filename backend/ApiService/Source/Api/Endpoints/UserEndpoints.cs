@@ -63,8 +63,65 @@ namespace Epam.ItMarathon.ApiService.Api.Endpoints
                 .WithSummary("Create and add user to a room.")
                 .WithDescription("Return created user info.");
 
+            // PUT /api/users/{id}
+            _ = root.MapPut("{id:long}", UpdateUser)
+                .AddEndpointFilterFactory(ValidationFactoryFilter.GetValidationFactory)
+                .Accepts<UserUpdateRequest>("application/json")
+                .Produces(StatusCodes.Status204NoContent)
+                .ProducesProblem(StatusCodes.Status400BadRequest)
+                .ProducesProblem(StatusCodes.Status401Unauthorized)
+                .ProducesProblem(StatusCodes.Status404NotFound)
+                .ProducesProblem(StatusCodes.Status500InternalServerError)
+                .WithSummary("Update user by Id.")
+                .WithDescription("NoContent if successful.");
+
+            // DELETE /api/users/{id}
+            _ = root.MapDelete("{id:long}", DeleteUserWithId)
+                .AddEndpointFilterFactory(ValidationFactoryFilter.GetValidationFactory)
+                .Produces(StatusCodes.Status204NoContent)
+                .ProducesProblem(StatusCodes.Status400BadRequest)
+                .ProducesProblem(StatusCodes.Status401Unauthorized)
+                .ProducesProblem(StatusCodes.Status404NotFound)
+                .ProducesProblem(StatusCodes.Status500InternalServerError)
+                .WithSummary("Delete user by Id.")
+                .WithDescription("NoContent if successful.");
+
             return application;
         }
+
+        static async Task<IResult> UpdateUser(
+            [FromRoute] ulong id,
+            [FromQuery, Required] string? userCode,
+            [FromBody, Required] UserUpdateRequest body,
+            IMediator mediator,
+            CancellationToken cancellationToken)
+        {
+            var cmd = new UpdateUsersRequest(
+                userCode!,
+                id,
+                body.FirstName,
+                body.LastName,
+                body.Email,
+                body.Phone,
+                body.DeliveryInfo,
+                body.Interests,
+                body.WantSurprise
+            );
+
+            var result = await mediator.Send(cmd, cancellationToken);
+            return result.IsFailure ? result.Error.ValidationProblem() : Results.NoContent();
+        }
+
+        public static async Task<IResult> DeleteUserWithId(
+            [FromRoute] ulong id,
+            [FromQuery, Required] string? userCode,
+            IMediator mediator,
+            CancellationToken cancellationToken)
+        {
+            var result = await mediator.Send(new DeleteUsersRequest(userCode!, id), cancellationToken);
+            return result.IsFailure ? result.Error.ValidationProblem() : Results.NoContent();
+        }
+
 
         /// <summary>
         /// Method that handles get all Users in the Room logic.

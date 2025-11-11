@@ -54,8 +54,9 @@ web_ui_port       = 80
 ################################################################################
 #Amazon Linux 2023 AMI 2023.8.20250808.1 x86_64 HVM kernel-6.1 in eu-central-1
 
-ami          = "ami-015cbce10f839bd0c"
-ec2_name_set = ["react", "angular", "dotnet"]
+ami          = "ami-037e6f133b068dbf5"
+instance_type = "t4g.micro"   # ← ДОБАВЬ ЭТО
+ec2_name_set  = ["react", "angular", "dotnet"]
 subnet       = ""
 sgs          = []
 iam_role_policies = {
@@ -74,3 +75,6 @@ db_engine            = "postgres"
 db_engine_version    = "17.5"
 db_instance_class    = "db.t3.micro"
 db_subnet_group_name = "rds-private-subnet-group"
+
+enable_rds = false
+enable_alb = true  # или false, если ALB тоже не нужен и true если нужен

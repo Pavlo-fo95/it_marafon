@@ -1,7 +1,9 @@
+import ItemCard from "../item-card/ItemCard";
 import CopyButton from "../copy-button/CopyButton";
 import InfoButton from "../info-button/InfoButton";
-import ItemCard from "../item-card/ItemCard";
-import { type ParticipantCardProps } from "./types";
+import IconButton from "../icon-button/IconButton";
+
+import type { ParticipantCardProps } from "./types";
 import "./ParticipantCard.scss";
 
 const ParticipantCard = ({
@@ -13,32 +15,45 @@ const ParticipantCard = ({
   adminInfo = "",
   participantLink = "",
   onInfoButtonClick,
+  onDeleteClick,
 }: ParticipantCardProps) => {
   return (
     <ItemCard title={`${firstName} ${lastName}`} isFocusable>
       <div className="participant-card-info-container">
-        {isCurrentUser ? <p className="participant-card-role">You</p> : null}
-
-        {!isCurrentUser && isAdmin ? (
+        {/* слева — "You"/"Admin" */}
+        {isCurrentUser && <p className="participant-card-role">You</p>}
+        {!isCurrentUser && isAdmin && (
           <p className="participant-card-role">Admin</p>
-        ) : null}
+        )}
 
-        {isCurrentUserAdmin ? (
-          <CopyButton
-            textToCopy={participantLink}
-            iconName="link"
-            successMessage="Personal Link is copied!"
-            errorMessage="Personal Link was not copied. Try again."
-          />
-        ) : null}
+        {/* справа — блок иконок */}
+        <div className="participant-card-icons">
+          {isCurrentUserAdmin && (
+            <CopyButton
+              textToCopy={participantLink}
+              iconName="link"
+              successMessage="Personal Link is copied!"
+              errorMessage="Personal Link was not copied. Try again."
+            />
+          )}
 
-        {isCurrentUserAdmin && !isAdmin ? (
-          <InfoButton withoutToaster onClick={onInfoButtonClick} />
-        ) : null}
+          {isCurrentUserAdmin && !isAdmin && onInfoButtonClick && (
+            <InfoButton withoutToaster onClick={onInfoButtonClick} />
+          )}
 
-        {!isCurrentUser && isAdmin ? (
-          <InfoButton infoMessage={adminInfo} />
-        ) : null}
+          {!isCurrentUser && isAdmin && <InfoButton infoMessage={adminInfo} />}
+
+          {/* корзина — показываем только если передан обработчик */}
+          {onDeleteClick && (
+            <IconButton
+              iconName="trash"
+              color="green"
+              onClick={onDeleteClick}
+              aria-label="Delete participant"
+              title="Delete participant"
+            />
+          )}
+        </div>
       </div>
     </ItemCard>
   );

@@ -119,9 +119,9 @@ variable "iam_instance_profile" {
 }
 
 variable "instance_type" {
-  description = "The type of instance to start"
+  description = "EC2 instance type"
   type        = string
-  default     = "t2.micro"
+  default     = "t4g.micro"
 }
 
 variable "ec2_name_set" {
@@ -162,6 +162,20 @@ variable "iam_role_policies" {
   description = "Policies attached to the IAM role"
   type        = map(string)
   default     = {}
+}
+
+################################################################################
+# Feature flags (enable/disable modules)
+################################################################################
+
+variable "enable_rds" {
+  type    = bool
+  default = false
+}
+
+variable "enable_alb" {
+  type    = bool
+  default = true
 }
 
 ################################

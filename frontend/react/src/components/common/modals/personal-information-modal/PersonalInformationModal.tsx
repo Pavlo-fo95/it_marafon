@@ -20,7 +20,7 @@ const PersonalInformationModal = ({
         firstName={personalInfoData.firstName}
         lastName={personalInfoData.lastName}
         phone={personalInfoData.phone}
-        email={personalInfoData.email}
+        email={personalInfoData.email ?? ""}
         deliveryInfo={personalInfoData.deliveryInfo}
         withoutHeader
       />

@@ -189,4 +189,37 @@
       height: 16px;
     }
   }
+  &--icon {
+    &-back-arrow {
+      --icon-url: url("../../../assets/images/form-wrapper-icons/back-arrow.svg");
+    }
+    &-plus-outlined {
+      --icon-url: url("../../../assets/images/icons/plus-outlined.svg");
+    }
+    &-home {
+      --icon-url: url("../../../assets/images/icons/home.svg");
+    }
+    /* 👇 добавь это */
+    &-trash {
+      --icon-url: url("../../../assets/images/icons/trash.svg");
+    }
+  }
+  &--danger {
+    background-color: #c73838;
+    color: #fff;
+
+    &:hover:not(:disabled),
+    &:focus-visible {
+      background-color: #e04a4a;
+    }
+
+    &:active:not(:disabled) {
+      background-color: #a82f2f;
+    }
+
+    &:disabled {
+      background-color: colors.$g-200;
+      color: colors.$g-600;
+    }
+  }
 }

@@ -1,3 +1,4 @@
+// src/components/room-page/room-page-content/RoomPageContent.tsx
 import { useState } from "react";
 import { useParams } from "react-router";
 
@@ -12,24 +13,26 @@ import PersonalInformationModal from "@components/common/modals/personal-informa
 
 import { generateParticipantLink, generateRoomLink } from "@utils/general";
 import { getCurrentUser, getParticipantInfoById } from "./utils";
+
 import type { WishlistProps } from "@components/common/wishlist/types";
 import type { RoomPageContentProps } from "./types";
+
 import "./RoomPageContent.scss";
 
 const RoomPageContent = ({
   participants,
   roomDetails,
   onDrawNames,
+  onDeleteParticipant,
 }: RoomPageContentProps) => {
   const { userCode } = useParams();
+
   const [isUserDetailsModalOpen, setIsUserDetailsModalOpen] = useState(false);
   const [isViewWishlistModalOpen, setViewWishlistModalOpen] = useState(false);
   const [isPersonalInformationModalOpen, setIsPersonalInformationModalOpen] =
     useState(false);
 
-  if (!userCode) {
-    return null;
-  }
+  if (!userCode) return null;
 
   const currentUser = getCurrentUser(userCode, participants);
 
@@ -41,12 +44,10 @@ const RoomPageContent = ({
     deliveryInfo: currentUser?.deliveryInfo ?? "",
   };
 
-  const isAdmin = currentUser?.isAdmin;
-
+  const isAdmin = !!currentUser?.isAdmin;
   const isRandomized = !!roomDetails?.closedOn;
 
   const giftRecipientId = currentUser?.giftToUserId;
-
   const giftRecipient = giftRecipientId
     ? getParticipantInfoById(giftRecipientId, participants)
     : null;
@@ -59,23 +60,17 @@ const RoomPageContent = ({
     deliveryInfo: giftRecipient?.deliveryInfo ?? "",
   };
 
-  const giftRecipientFullName = `${giftRecipient?.firstName} ${giftRecipient?.lastName}`;
+  const giftRecipientFullName =
+    `${giftRecipient?.firstName ?? ""} ${giftRecipient?.lastName ?? ""}`.trim();
 
   const giftRecipientWishlistData: WishlistProps = giftRecipient?.wantSurprise
     ? { variant: "surprise", interests: giftRecipient?.interests ?? "" }
     : { variant: "wishlist", wishList: giftRecipient?.wishList ?? [] };
 
-  const handleReadUserDetails = () => {
-    setIsUserDetailsModalOpen(true);
-  };
-
-  const handleViewWishListModal = () => {
-    setViewWishlistModalOpen(true);
-  };
-
-  const handleViewPersonalInformation = () => {
+  const handleReadUserDetails = () => setIsUserDetailsModalOpen(true);
+  const handleViewWishListModal = () => setViewWishlistModalOpen(true);
+  const handleViewPersonalInformation = () =>
     setIsPersonalInformationModalOpen(true);
-  };
 
   return (
     <div className="room-page-content">
@@ -91,21 +86,26 @@ const RoomPageContent = ({
           invitationLink={generateRoomLink(roomDetails.invitationCode)}
         />
 
-        {currentUser ? (
+        {currentUser && (
           <ParticipantInfo
-            participantName={currentUser?.firstName}
+            participantName={currentUser.firstName}
             roomName={roomDetails.name}
-            participantLink={generateParticipantLink(currentUser?.userCode)}
+            participantLink={generateParticipantLink(currentUser.userCode)}
             onViewInformation={handleViewPersonalInformation}
           />
-        ) : null}
+        )}
       </div>
 
       <div className="room-page-content-row">
-        <ParticipantsList participants={participants} />
+        <ParticipantsList
+          participants={participants}
+          isRandomized={isRandomized}
+          currentUserId={currentUser?.id ?? 0}
+          onDeleteParticipant={onDeleteParticipant}
+        />
 
         <div className="room-page-content-column">
-          {isAdmin || (!isAdmin && isRandomized) ? (
+          {(isAdmin || (!isAdmin && isRandomized)) && (
             <RandomizationPanel
               isRandomized={isRandomized}
               userCount={participants.length}
@@ -113,7 +113,7 @@ const RoomPageContent = ({
               onDraw={onDrawNames}
               onReadUserDetails={handleReadUserDetails}
             />
-          ) : null}
+          )}
 
           <WishlistPreview
             isWantSurprise={currentUser?.wantSurprise}
@@ -123,16 +123,16 @@ const RoomPageContent = ({
         </div>
       </div>
 
-      {giftRecipientPersonalInfo ? (
+      {giftRecipient && (
         <RandomizationModal
           isOpen={isUserDetailsModalOpen}
           onClose={() => setIsUserDetailsModalOpen(false)}
           personalInfoData={giftRecipientPersonalInfo}
           wishlistData={giftRecipientWishlistData}
         />
-      ) : null}
+      )}
 
-      {currentUser ? (
+      {currentUser && (
         <ViewWishlistModal
           isOpen={isViewWishlistModalOpen}
           onClose={() => setViewWishlistModalOpen(false)}
@@ -141,7 +141,7 @@ const RoomPageContent = ({
           interests={currentUser.interests ?? ""}
           wishlistData={currentUser.wishList ?? []}
         />
-      ) : null}
+      )}
 
       <PersonalInformationModal
         isOpen={isPersonalInformationModalOpen}

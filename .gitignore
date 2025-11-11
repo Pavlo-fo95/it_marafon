@@ -19,3 +19,14 @@
 # Ignore environment-specific files
 .envrc
 .env
+
+# local env
+.env
+
+# never commit secrets
+aws_keys/
+*.Zone.Identifier
+.idea/
+
+# never commit secrets
+aws_keys/

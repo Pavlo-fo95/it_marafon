@@ -4,11 +4,12 @@ import type {
   GetParticipantsResponse,
   GetRoomResponse,
   DrawRoomResponse,
-} from "@types/api.ts";
+} from "@types/api";
 import Loader from "@components/common/loader/Loader.tsx";
 import { useFetch } from "@hooks/useFetch.ts";
 import useToaster from "@hooks/useToaster.ts";
 import { BASE_API_URL } from "@utils/general.ts";
+import { apiDelete } from "@utils/api.ts";
 import RoomPageContent from "./room-page-content/RoomPageContent.tsx";
 import { ROOM_PAGE_TITLE } from "./utils.ts";
 import "./RoomPage.scss";
@@ -26,14 +27,7 @@ const RoomPage = () => {
     isLoading: isLoadingRoomDetails,
     fetchData: fetchRoomDetails,
   } = useFetch<GetRoomResponse>(
-    {
-      url: `${BASE_API_URL}/api/rooms?userCode=${userCode}`,
-      method: "GET",
-      headers: { "Content-Type": "application/json" },
-      onError: () => {
-        showToast("Something went wrong. Try again.", "error", "large");
-      },
-    },
+    { url: `${BASE_API_URL}/api/rooms?userCode=${userCode}`, method: "GET" },
     true,
   );
 
@@ -44,10 +38,6 @@ const RoomPage = () => {
   } = useFetch<GetParticipantsResponse>({
     url: `${BASE_API_URL}/api/users?userCode=${userCode}`,
     method: "GET",
-    headers: { "Content-Type": "application/json" },
-    onError: () => {
-      showToast("Something went wrong. Try again.", "error", "large");
-    },
   });
 
   const { fetchData: fetchRandomize, isLoading: isRandomizing } =
@@ -55,7 +45,6 @@ const RoomPage = () => {
       {
         url: `${BASE_API_URL}/api/rooms/draw?userCode=${userCode}`,
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         onSuccess: () => {
           showToast(
             "Success! All participants are matched.\nLet the gifting magic start!",
@@ -65,19 +54,35 @@ const RoomPage = () => {
           fetchRoomDetails();
           fetchParticipants();
         },
-        onError: () => {
-          showToast("Something went wrong. Try again.", "error", "large");
-        },
+        onError: () =>
+          showToast("Something went wrong. Try again.", "error", "large"),
       },
       false,
     );
 
+  // единая функция удаления, без any/пустых блоков
+  const handleDeleteParticipant = async (participantId: number) => {
+    if (!userCode) return;
+
+    const url = `${BASE_API_URL}/api/users/${participantId}?userCode=${userCode}`;
+
+    try {
+      await apiDelete(url, { headers: { Accept: "application/json" } });
+      showToast("Participant removed.", "success", "large");
+      await fetchParticipants();
+      await fetchRoomDetails();
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : "Unknown error";
+
+      console.error("DELETE /api/users failed:", msg);
+      showToast(`Failed to remove participant. ${msg}`, "error", "large");
+    }
+  };
+
   const isLoading =
     isLoadingRoomDetails || isLoadingParticipants || isRandomizing;
 
-  if (!userCode) {
-    return null;
-  }
+  if (!userCode) return null;
 
   return (
     <main className="room-page">
@@ -87,6 +92,7 @@ const RoomPage = () => {
         participants={participants ?? []}
         roomDetails={roomDetails ?? ({} as GetRoomResponse)}
         onDrawNames={() => fetchRandomize()}
+        onDeleteParticipant={handleDeleteParticipant}
       />
     </main>
   );

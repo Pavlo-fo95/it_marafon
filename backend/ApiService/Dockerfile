@@ -1,53 +1,41 @@
-# Docker image ARGS
-ARG BASE_IMAGE_REPO=mcr.microsoft.com
-ARG BASE_IMAGE_BUILD=dotnet/sdk
-ARG BASE_IMAGE_BUILD_TAG=9.0
-ARG BASE_IMAGE_RUNTIME=dotnet/aspnet
-ARG BASE_IMAGE_RUNTIME_TAG=9.0
+# -------- build --------
+FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 
-# Setup Build Image
-FROM ${BASE_IMAGE_REPO}/${BASE_IMAGE_BUILD}:${BASE_IMAGE_BUILD_TAG} AS build
-
-# Build, Test and Publish ARGS
 ARG VERSION_PREFIX=0.1.3
-ARG VERSION_SUFFIX
+ARG VERSION_SUFFIX=""
 ARG ENVIRONMENT=docker
+# Можно переопределить при сборке:
+# --build-arg API_PROJECT_PATH=backend/ApiService/Source/Api/Api.csproj
+ARG API_PROJECT_PATH=""
 
-# Build, Test and Publish ENVS
 ENV DOTNET_ENVIRONMENT=${ENVIRONMENT}
+WORKDIR /src
 
-WORKDIR /sln
-
-# Dotnet Restore
-COPY ./*.sln ./
-COPY Source/*/*.csproj ./
-RUN for file in $(ls *.csproj); do mkdir -p Source/${file%.*}/ && mv $file Source/${file%.*}/; done
-COPY Tests/*/*.csproj ./
-RUN for file in $(ls *.csproj); do mkdir -p Tests/${file%.*}/ && mv $file Tests/${file%.*}/; done
-
-RUN dotnet restore -v minimal
-
-# Bust Cache
-ARG CACHE_BUST 1
-
-# Copy Remaining Files
+# Берём весь репозиторий (ускоряй через .dockerignore)
 COPY . .
 
-# Dotnet Build
-RUN dotnet build --no-restore -c Release -v minimal -p:VersionPrefix=${VERSION_PREFIX} -p:VersionSuffix=${VERSION_SUFFIX}
+# Найдём Api.csproj: либо из аргумента, либо первым по маске
+RUN set -eux; \
+    if [ -n "${API_PROJECT_PATH}" ]; then \
+        API_PROJ="${API_PROJECT_PATH}"; \
+        if [ ! -f "$API_PROJ" ]; then echo "Api csproj not found: $API_PROJ"; exit 1; fi; \
+    else \
+        API_PROJ="$(find . -type f -name '*Api.csproj' -print -quit)"; \
+        if [ -z "$API_PROJ" ]; then echo 'No *Api.csproj found (pass --build-arg API_PROJECT_PATH=...)'; exit 1; fi; \
+    fi; \
+    echo "Using API project: $API_PROJ"; \
+    dotnet restore "$API_PROJ" -v minimal; \
+    VS_ARG=""; if [ -n "${VERSION_SUFFIX}" ]; then VS_ARG="-p:VersionSuffix=${VERSION_SUFFIX}"; fi; \
+    dotnet build   "$API_PROJ" --no-restore -c Release -v minimal -p:VersionPrefix=${VERSION_PREFIX} $VS_ARG; \
+    dotnet publish "$API_PROJ" --no-restore -c Release -v minimal -o /app -p:VersionPrefix=${VERSION_PREFIX} $VS_ARG
 
-FROM scratch AS coverage
-COPY --from=test /sln/Tests/results/*.xml .
-
-# Dotnet Publish
-FROM build AS publish
-ARG VERSION_PREFIX=0.1.3
-ARG VERSION_SUFFIX
-RUN dotnet publish ./Source/**/Api.csproj --no-restore -c Release -v quiet -o app -p:VersionPrefix=${VERSION_PREFIX} -p:VersionSuffix=${VERSION_SUFFIX}
-
-# Runtime Image
-FROM ${BASE_IMAGE_REPO}/${BASE_IMAGE_RUNTIME}:${BASE_IMAGE_RUNTIME_TAG} AS run
-WORKDIR /
+# -------- runtime --------
+FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS run
+WORKDIR /app
+ENV ASPNETCORE_URLS=http://0.0.0.0:8080
 EXPOSE 8080
-COPY --from=publish /sln/app .
+
+COPY --from=build /app ./
+
+# Если имя DLL иное — поправь строку ниже
 ENTRYPOINT ["dotnet", "Epam.ItMarathon.ApiService.Api.dll"]

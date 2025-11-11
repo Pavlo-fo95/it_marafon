@@ -1,5 +1,5 @@
-import type { IconButtonProps } from "./types.ts";
-import { ICONS_PATH } from "./utils.ts";
+import type { IconButtonProps } from "./types";
+import { ICONS_PATH } from "./utils";
 import "./IconButton.scss";
 
 const IconButton = ({
@@ -15,7 +15,7 @@ const IconButton = ({
       type="button"
       {...restProps}
     >
-      <svg className="icon-button__icon">
+      <svg className="icon-button__icon" aria-hidden="true" focusable="false">
         <use href={`${ICONS_PATH}${iconName}`} />
       </svg>
     </button>

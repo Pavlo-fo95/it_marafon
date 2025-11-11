@@ -1,7 +1,7 @@
-import type { PersonalInformationProps } from "@components/common/personal-information/types";
+import type { PersonalInformation } from "@components/room-page/participants-list/types";
 
-export interface ParticipantDetailsModalProps {
-  isOpen?: boolean;
+export type ParticipantDetailsModalProps = {
+  isOpen: boolean;
   onClose: () => void;
-  personalInfoData: PersonalInformationProps;
-}
+  personalInfoData: PersonalInformation;
+};
