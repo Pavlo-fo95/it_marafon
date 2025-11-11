@@ -39,3 +39,12 @@ aws_keys/
 
 # Windows ADS
 *:[Zz]one.Identifier
+
+# stray temp/debug files
+=
+[backend
+[front-angular
+[front-react
+resolve
+transferring
+sha256:*
