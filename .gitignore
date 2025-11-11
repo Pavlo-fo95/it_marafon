@@ -30,3 +30,12 @@ aws_keys/
 
 # never commit secrets
 aws_keys/
+
+# secrets
+aws_keys/
+
+# IDE
+.idea/
+
+# Windows ADS
+*:[Zz]one.Identifier
