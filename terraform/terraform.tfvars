@@ -26,7 +26,7 @@ web_ui_port       = 80
 
 # EC2
 ami           = "ami-037e6f133b068dbf5" # arm64
-instance_type = "t4.micro"
+instance_type = "t4g.micro"
 ec2_name_set  = ["react", "angular", "dotnet"]
 iam_role_policies = {
   AdministratorAccess = "arn:aws:iam::aws:policy/AdministratorAccess"
