@@ -25,14 +25,13 @@ web_backend_port  = 8080
 web_ui_port       = 80
 
 # EC2
-ami           = "ami-037e6f133b068dbf5" # x86_64
-instance_type = "t3.micro"
+ami           = "ami-037e6f133b068dbf5" # arm64
+instance_type = "t4.micro"
 ec2_name_set  = ["react", "angular", "dotnet"]
 iam_role_policies = {
   AdministratorAccess = "arn:aws:iam::aws:policy/AdministratorAccess"
   SSM                 = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
 }
-
 # RDS / Flags
 enable_rds = false
 enable_alb = true
