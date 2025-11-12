@@ -10,7 +10,13 @@
 # Ignore variables files
 .terraform.lock.hcl
 *.tfvars
+*.tfstate
 *.tfstate*
+.terraform/
+crash.log
+override.tf
+override.tf.json
+terraform.tfvars
 *.auto.tfvars
 *.config
 !terraform/config.tfvars

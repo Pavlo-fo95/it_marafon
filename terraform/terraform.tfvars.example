@@ -1,0 +1,5 @@
+aws_region         = "eu-central-1"
+project            = "it-marafon"
+env                = "prod"
+backend_image_tag  = "latest"
+frontend_image_tag = "latest"

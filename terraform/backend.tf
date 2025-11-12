@@ -1,8 +1,9 @@
 terraform {
   backend "s3" {
-    bucket  = "terraform-state-pavlo-2025"  
-    key     = "envs/prod/terraform.tfstate" 
-    region  = "eu-central-1"
-    encrypt = true
+    bucket         = "terraform-state-pavlo-2025"
+    key            = "envs/prod/terraform.tfstate"
+    region         = "eu-central-1"
+    dynamodb_table = "terraform-locks-pavlo-2025"
+    encrypt        = true
   }
 }

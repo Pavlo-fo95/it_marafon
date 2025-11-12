@@ -1,33 +1,55 @@
-################################
-# Global Variables
+################################ 
+# Global
 ################################
 
 variable "aws_region" {
-  description = "AWS region on where to deploy"
+  description = "AWS region"
+  type        = string
+}
+
+variable "project" {
+  description = "Project name (tag)"
+  type        = string
+}
+
+variable "env" {
+  description = "Environment (tag)"
   type        = string
 }
 
 variable "tags" {
-  description = "A map of tags to add to all resources"
+  description = "Common tags"
   type        = map(string)
   default     = {}
 }
 
+#теги образов (ECR/контейнеры) —  интерфейс
+variable "backend_image_tag" {
+  type    = string
+  default = null
+}
+
+variable "frontend_image_tag" {
+  type    = string
+  default = null
+}
+
 ################################
-# VPC Variables
+# VPC
 ################################
 
 variable "vpc_name" {
   description = "VPC name"
   type        = string
 }
+
 variable "vpc_cidr" {
-  description = "Your VPC adress block"
+  description = "VPC CIDR"
   type        = string
 }
 
 variable "subnets" {
-  description = "List of subnets"
+  description = "Map of subnets"
   type = map(object({
     cidr_block = string
     public     = bool
@@ -35,119 +57,107 @@ variable "subnets" {
   }))
 }
 
-################################################################################
-# Security Groups
-################################################################################
-
-variable "name_prefix" {
-  description = "Prefix for naming security groups"
+variable "az_letter" {
+  description = "AZ letter suffix (a|b|c)"
   type        = string
 }
 
-variable "rds_port" {
-  description = "Port for RDS database"
-  type        = number
-}
+################################
+# SG / ALB / Ports
+################################
 
 variable "project_name" {
-  description = "Name of the project, used as prefix for resources"
+  description = "Name prefix for resources"
   type        = string
 }
 
 variable "web_backend_port" {
-  description = "Port for Web Backend service"
+  description = "Backend port"
   type        = number
 }
 
 variable "web_ui_port" {
-  description = "Port for Web UI service"
+  description = "Frontend/UI port"
   type        = number
 }
 
 variable "alb_ingress_ports" {
-  description = "Ports to allow on ALB"
+  description = "Ports allowed on ALB"
   type        = list(number)
 }
 
 variable "alb_ingress_cidr" {
-  description = "CIDR blocks for ALB ingress"
+  description = "CIDRs allowed to ALB"
   type        = list(string)
 }
 
-variable "az_letter" {
-  description = "Availability zone letter suffix (a, b, c, etc.)"
-  type        = string
-}
+################################
+# EC2
+################################
 
-################################################################################
-# Instance
-################################################################################
-
-variable "subnet" {
-  description = "Subnet id"
-  type        = string
-}
-
-variable "sgs" {
-  description = "Security Groups ids"
-  type        = list(string)
-  default     = [""]
+variable "ec2_name_set" {
+  description = "Set of EC2 instance names"
+  type        = set(string)
+  default     = []
 }
 
 variable "ami" {
-  description = "ID of AMI to use for the instance"
-  type        = string
-  default     = null
-}
-
-variable "associate_public_ip_address" {
-  description = "Whether to associate a public IP address with an instance in a VPC"
-  type        = bool
-  default     = null
-}
-
-variable "availability_zone" {
-  description = "AZ to start the instance in"
-  type        = string
-  default     = null
-}
-
-variable "iam_instance_profile" {
-  description = "IAM Instance Profile to launch the instance with. Specified as the name of the Instance Profile"
+  description = "AMI id (must match instance arch)"
   type        = string
   default     = null
 }
 
 variable "instance_type" {
-  description = "EC2 instance type"
+  description = "Instance type (t3.micro or t4g.micro, etc.)"
   type        = string
-  default     = "t4g.micro"
+  default     = "t3.micro"
 }
 
-variable "ec2_name_set" {
-  description = "Set of names for EC2 VMs"
-  type        = set(string)
+# внутренняя переменная модуля ec2
+variable "subnet" {
+  description = "Subnet id (used by module/03-ec2)"
+  type        = string
+  default     = null
+}
+
+variable "sgs" {
+  description = "Security Groups ids (used by module/03-ec2)"
+  type        = list(string)
   default     = []
 }
 
-################################################################################
-# IAM Role / Instance Profile
-################################################################################
+variable "associate_public_ip_address" {
+  description = "Associate public IP to instance"
+  type        = bool
+  default     = true
+}
+
+variable "availability_zone" {
+  description = "AZ (optional)"
+  type        = string
+  default     = null
+}
+
+variable "iam_instance_profile" {
+  description = "IAM instance profile name"
+  type        = string
+  default     = null
+}
 
 variable "create_iam_instance_profile" {
-  description = "Determines whether an IAM instance profile is created or to use an existing IAM instance profile"
+  description = "Create IAM instance profile for EC2"
   type        = bool
-  default     = false
+  default     = true
 }
 
 variable "iam_role_name" {
-  description = "Name to use on IAM role created"
+  description = "IAM role name"
   type        = string
   default     = null
 }
 
 variable "iam_role_use_name_prefix" {
-  description = "Determines whether the IAM role name (`iam_role_name` or `name`) is used as a prefix"
+  description = "Use role name as prefix"
   type        = bool
   default     = true
 }
@@ -159,14 +169,14 @@ variable "iam_role_path" {
 }
 
 variable "iam_role_policies" {
-  description = "Policies attached to the IAM role"
+  description = "Policies attached to IAM role"
   type        = map(string)
   default     = {}
 }
 
-################################################################################
-# Feature flags (enable/disable modules)
-################################################################################
+################################
+# Feature flags
+################################
 
 variable "enable_rds" {
   type    = bool
@@ -182,40 +192,51 @@ variable "enable_alb" {
 # RDS
 ################################
 
+variable "rds_port" {
+  description = "RDS port"
+  type        = number
+  default     = 5432
+}
+
 variable "db_id" {
-  description = "The RDS instance identifier, also used as a 'Name' tag for the DB"
+  description = "RDS instance id"
   type        = string
+  default     = "postgres-db"
 }
 
 variable "db_username" {
-  description = "Master username for the database"
+  description = "RDS master username"
   type        = string
   sensitive   = true
+  default     = "postgres"
 }
 
 variable "db_engine" {
-  description = "The database engine to use for the RDS instance"
+  description = "RDS engine"
   type        = string
+  default     = "postgres"
 }
 
 variable "db_engine_version" {
-  description = "The version of the database engine"
+  description = "RDS engine version"
   type        = string
+  default     = "17.5"
 }
 
 variable "db_instance_class" {
-  description = "The instance type for the RDS instance"
+  description = "RDS instance class"
   type        = string
   default     = "db.t3.micro"
 }
 
 variable "db_storage_size" {
-  description = "Size of the RDS instance storage in GB."
+  description = "RDS storage size (GB)"
   type        = number
   default     = 20
 }
 
 variable "db_subnet_group_name" {
-  description = "The name of the subnet group where RDS instance is placed"
+  description = "RDS subnet group name"
   type        = string
+  default     = "rds-private-subnet-group"
 }

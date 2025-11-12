@@ -51,7 +51,7 @@ resource "aws_lb_target_group" "web_ui_react" {
     healthy_threshold   = 2
     unhealthy_threshold = 2
   }
- 
+
   tags = merge(
     var.tags,
     { "Name" = "${var.name}-ui_react" }
@@ -74,7 +74,7 @@ resource "aws_lb_target_group" "web_ui_angular" {
     healthy_threshold   = 2
     unhealthy_threshold = 2
   }
- 
+
   tags = merge(
     var.tags,
     { "Name" = "${var.name}-angular" }
@@ -87,15 +87,15 @@ resource "aws_lb_listener" "http" {
   protocol          = "HTTP"
 
   default_action {
-    type             = "forward"
-    
+    type = "forward"
+
     forward {
       target_group {
-        arn  = aws_lb_target_group.web_ui_react.arn
+        arn    = aws_lb_target_group.web_ui_react.arn
         weight = 50 # 50% to React
       }
       target_group {
-        arn  = aws_lb_target_group.web_ui_angular.arn
+        arn    = aws_lb_target_group.web_ui_angular.arn
         weight = 50 # 50% to Angular
       }
       stickiness {

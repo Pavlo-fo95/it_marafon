@@ -9,21 +9,22 @@ output "vpc_cidr_block" {
 }
 
 output "public_subnet_ids" {
-  description = "IDs of created public subnets"
-  value       = try(module.vpc.public_subnet_ids, null)
+  description = "IDs of public subnets"
+  value       = try(module.vpc.public_subnet_ids, [])
 }
 
 output "private_subnet_ids" {
-  description = "IDs of created private subnets"
-  value       = try(module.vpc.private_subnet_ids, null)
+  description = "IDs of private subnets"
+  value       = try(module.vpc.private_subnet_ids, [])
 }
 
-output "ec2_id" {
-  description = "EC2 module output"
-  value       = try(module.ec2, null)
+# если полезно видеть, какие EC2 создались (map по each.key)
+output "ec2_instances" {
+  description = "EC2 instances module outputs (map)"
+  value       = try(module.ec2, {})
 }
 
 output "alb_dns_name" {
-  description = "The DNS name of the load balancer"
+  description = "ALB DNS name"
   value       = try(module.alb.lb_dns_name, null)
 }
