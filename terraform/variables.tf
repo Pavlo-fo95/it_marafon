@@ -108,9 +108,9 @@ variable "ami" {
 }
 
 variable "instance_type" {
-  description = "Instance type (t3.micro or t4g.micro, etc.)"
+  description = "EC2 instance type"
   type        = string
-  default     = "t3.micro"
+  default     = "t4g.micro"
 }
 
 # внутренняя переменная модуля ec2
