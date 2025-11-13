@@ -226,7 +226,7 @@ variable "db_engine_version" {
 variable "db_instance_class" {
   description = "RDS instance class"
   type        = string
-  default     = "db.t4g.micro"
+  default     = "db.t3.micro"
 }
 
 variable "db_storage_size" {

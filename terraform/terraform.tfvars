@@ -32,6 +32,7 @@ iam_role_policies = {
   AdministratorAccess = "arn:aws:iam::aws:policy/AdministratorAccess"
   SSM                 = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
 }
+
 # RDS / Flags
 enable_rds = false
 enable_alb = true

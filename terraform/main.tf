@@ -42,7 +42,7 @@ module "ec2" {
 
   ami           = var.ami
   ec2_name      = each.key
-  instance_type = var.instance_type
+  instance_type = "t4g.micro"
 
   # Берём первую подсеть (subnet0), как в terraform.tfvars
   subnet = module.vpc.vpc_subnet_ids["subnet0"]
