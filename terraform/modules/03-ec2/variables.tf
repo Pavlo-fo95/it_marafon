@@ -1,3 +1,7 @@
+################################################################################
+# Tags
+################################################################################
+
 variable "tags" {
   description = "A mapping of tags to assign to the resource"
   type        = map(string)
@@ -13,7 +17,6 @@ variable "ami" {
   type        = string
   default     = null
 }
-
 
 variable "associate_public_ip_address" {
   description = "Whether to associate a public IP address with an instance in a VPC"
@@ -39,11 +42,12 @@ variable "instance_type" {
 }
 
 variable "ec2_name" {
-  description = "Name to be used on EC2 instance created"
+  description = "Name to be used on EC2 instance created (react / angular / dotnet)"
   type        = string
   default     = ""
 }
 
+# Это в модуле не используется, но можно оставить для совместимости
 variable "ec2_name_set" {
   description = "Set of names for EC2 VMs"
   type        = set(string)
@@ -112,15 +116,14 @@ variable "iam_role_policies" {
   type        = map(string)
   default     = {}
 }
-variable "web_ui_port" {
-  description = "Port for Web UI service"
-  type        = number
-}
 
-variable "target_group_arn" {
-  description = "ARN of the target group to attach the instance to"
-  type        = string
-  default     = null
+################################################################################
+# Ports / Target group
+################################################################################
+
+variable "web_ui_port" {
+  description = "Port for Web UI service (React / Angular)"
+  type        = number
 }
 
 variable "web_backend_port" {
@@ -130,7 +133,27 @@ variable "web_backend_port" {
 }
 
 variable "port" {
-  description = "Port for the service"
+  description = "Port used in the target group attachment"
   type        = number
   default     = 3000
+}
+
+variable "target_group_arn" {
+  description = "ARN of the target group to attach the instance to"
+  type        = string
+  default     = null
+}
+
+################################################################################
+# Docker images
+################################################################################
+
+variable "docker_backend_image" {
+  description = "Backend Docker image"
+  type        = string
+}
+
+variable "docker_front_image" {
+  description = "Frontend Docker image"
+  type        = string
 }

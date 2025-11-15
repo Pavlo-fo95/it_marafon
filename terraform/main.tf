@@ -42,14 +42,8 @@ module "ec2" {
 
   ami           = var.ami
   ec2_name      = each.key
-  instance_type = var.instance_type #"t3.micro"
-
-  # Берём первую подсеть (subnet0), как в terraform.tfvars
-  subnet = module.vpc.vpc_subnet_ids["subnet0"]
-
-  # Security groups:
-  # - для dotnet (бэкенд) → backend SG
-  # - для react/angular → web UI SG
+  instance_type = var.instance_type
+  subnet        = module.vpc.vpc_subnet_ids["subnet0"]
   sgs = [
     each.key == "dotnet"
     ? module.security_groups.web_backend_security_group_id
@@ -63,18 +57,19 @@ module "ec2" {
   web_ui_port      = var.web_ui_port
   web_backend_port = var.web_backend_port
 
-  # Порт, который реально слушает приложение на инстансе
   port = each.key == "dotnet" ? var.web_backend_port : var.web_ui_port
 
-  # Target group, куда этот инстанс прикрепляется
   target_group_arn = (
     each.key == "angular" ? module.alb.web_ui_angular_target_group_arn :
-    each.key == "react" ? module.alb.web_ui_react_target_group_arn :
-    each.key == "dotnet" ? module.alb.backend_target_group_arn :
+    each.key == "react"   ? module.alb.web_ui_react_target_group_arn :
+    each.key == "dotnet"  ? module.alb.backend_target_group_arn :
     null
   )
 
   associate_public_ip_address = true
+
+  docker_backend_image = "pavlovaalla88/secret-nick-api:0.1.3"
+  docker_front_image   = "pavlovaalla88/secret-nick-front:0.1.3"
 }
 
 ################################################################################

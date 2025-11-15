@@ -10,14 +10,7 @@ locals {
     null,
   )
 
-  user_data = <<-EOT
-    #!/bin/bash
-    yum update -y
-    yum install -y docker
-    service docker enable
-    service docker start
-    usermod -a -G docker ec2-user
-  EOT
+  iam_role_name = try(coalesce(var.iam_role_name, var.ec2_name), "")
 }
 
 ################################################################################
@@ -36,10 +29,6 @@ data "aws_iam_policy_document" "assume_role_policy" {
       identifiers = ["ec2.${data.aws_partition.current.dns_suffix}"]
     }
   }
-}
-
-locals {
-  iam_role_name = try(coalesce(var.iam_role_name, var.ec2_name), "")
 }
 
 resource "aws_iam_role" "this" {
@@ -91,8 +80,18 @@ resource "aws_instance" "this" {
   instance_type               = var.instance_type
   subnet_id                   = var.subnet
   vpc_security_group_ids      = var.sgs
-  user_data_base64            = base64encode(local.user_data)
-  user_data_replace_on_change = false
+
+  # Скрипт user_data — запускаем Docker и нужный контейнер
+  user_data = templatefile("${path.module}/user_data.sh", {
+    docker_backend_image = var.docker_backend_image
+    docker_front_image   = var.docker_front_image
+    ec2_name             = var.ec2_name
+    web_backend_port     = var.web_backend_port
+    web_ui_port          = var.web_ui_port
+  })
+
+  # чтобы при изменении user_data EC2 пересоздавался
+  user_data_replace_on_change = true
 
   tags = merge(
     { "Name" = var.ec2_name },
@@ -100,10 +99,12 @@ resource "aws_instance" "this" {
   )
 }
 
+################################################################################
+# ALB Target group attachment
+################################################################################
+
 resource "aws_lb_target_group_attachment" "this" {
-
   count = contains(["angular", "react", "dotnet"], var.ec2_name) ? 1 : 0
-
 
   target_group_arn = var.target_group_arn
   target_id        = aws_instance.this.id
