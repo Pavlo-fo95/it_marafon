@@ -24,13 +24,13 @@ resource "aws_vpc_security_group_ingress_rule" "alb_ports" {
   description       = "Allow traffic on port ${each.value}"
 }
 
-resource "aws_vpc_security_group_egress_rule" "alb_egress" {
-  security_group_id = aws_security_group.alb.id
+# resource "aws_vpc_security_group_egress_rule" "alb_egress" {
+#   security_group_id = aws_security_group.alb.id
 
-  cidr_ipv4   = "0.0.0.0/0"
-  ip_protocol = "-1" # All protocols
-  description = "Allow all outbound traffic"
-}
+#   cidr_ipv4   = "0.0.0.0/0"
+#   ip_protocol = "-1" # All protocols
+#   description = "Allow all outbound traffic"
+# }
 
 ################################################################################
 # Web Backend Security Group

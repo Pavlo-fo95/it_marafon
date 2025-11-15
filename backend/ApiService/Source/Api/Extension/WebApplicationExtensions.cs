@@ -6,58 +6,40 @@ using Serilog;
 
 namespace Epam.ItMarathon.ApiService.Api.Extension
 {
-    /// <summary>
-    /// WebApplication builder static setup-class.
-    /// </summary>
     [ExcludeFromCodeCoverage]
     public static class WebApplicationExtensions
     {
-        /// <summary>
-        /// Extension method for more fluent setup. This is where all required configuration happens.
-        /// </summary>
-        /// <param name="application">The WebApplication instance.</param>
-        /// <returns>Reference to input <paramref name="application"/>.</returns>
         public static WebApplication ConfigureApplication(this WebApplication application)
         {
             #region Logging
-
-            _ = application.UseSerilogRequestLogging();
-
-            #endregion Logging
+            application.UseSerilogRequestLogging();
+            #endregion
 
             #region Security
-
-            _ = application.UseHsts();
-            _ = application.UseHttpsRedirection();
-            _ = application.UseCors();
-
-            #endregion Security
+            application.UseHsts();
+            application.UseHttpsRedirection();
+            application.UseCors();
+            #endregion
 
             #region Swagger
-
             var textInfo = CultureInfo.CurrentCulture.TextInfo;
 
-            _ = application.UseSwagger();
-            _ = application.UseSwaggerUI(c =>
+            application.UseSwagger();
+            application.UseSwaggerUI(c =>
                 c.SwaggerEndpoint(
                     "/swagger/v1/swagger.json",
                     $"Secret Nick API - {textInfo.ToTitleCase(application.Environment.EnvironmentName)} - V1"));
-
-            #endregion Swagger
+            #endregion
 
             #region MinimalApi
-
-            _ = application.MapSystemEndpoints();
-            _ = application.MapRoomEndpoints();
-            _ = application.MapUserEndpoints();
-
-            #endregion MinimalApi
+            application.MapSystemEndpoints();
+            application.MapRoomEndpoints();
+            application.MapUserEndpoints();
+            #endregion
 
             #region Database
-
             application.Services.MigrateDatabase();
-
-            #endregion Database
+            #endregion
 
             return application;
         }

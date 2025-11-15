@@ -8,20 +8,23 @@ try
         .CreateBuilder(args)
         .ConfigureApplicationBuilder();
 
-    // Подключаем Application слой (MediatR + FluentValidation)
+    // Application слой (MediatR + FluentValidation)
     builder.Services.InjectApplicationLayer();
 
-    var app = builder
-        .Build()
-        .ConfigureApplication();
+    var app = builder.Build();
 
-    // В продакшне включаем редирект на HTTPS
-    if (!app.Environment.IsDevelopment())
-    {
-        // Если UseHttpsRedirection уже вызывается внутри ConfigureApplication(),
-        // этот блок можно удалить, чтобы не было дубля.
-        app.UseHttpsRedirection();
-    }
+    // 1. Статика для фронта из wwwroot
+    app.UseDefaultFiles();   // ищет index.html в wwwroot
+    app.UseStaticFiles();    // раздаёт файлы из wwwroot и wwwroot/assets
+
+    // 2. Вся "оригинальная" конфигурация приложения (логирование, CORS, Swagger, минимальные API, миграции)
+    app.ConfigureApplication();
+
+    // 3. SPA-fallback: любые пути БЕЗ точки (не файлы) → index.html
+    //   /room/..., /join/... → фронт
+    //   /swagger, /swagger/index.html → свои пути
+    //   /assets/... .js/.css/.svg → НЕ попадают сюда
+    app.MapFallbackToFile("{*path:nonfile}", "index.html");
 
     Log.Information("Starting host...");
     app.Run();
