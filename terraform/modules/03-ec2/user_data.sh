@@ -1,23 +1,37 @@
 #!/bin/bash
 set -eux
 
-# пример под Ubuntu; под Amazon Linux заменить apt-get на yum
-if ! command -v docker &>/dev/null; then
-  apt-get update -y || yum update -y
-  apt-get install -y docker.io || yum install -y docker
-  systemctl enable docker
-  systemctl start docker
+# 1. Установка Docker (поддержка Amazon Linux и Ubuntu/Debian)
+if command -v apt-get >/dev/null 2>&1; then
+  apt-get update -y
+  apt-get install -y docker.io
+elif command -v yum >/dev/null 2>&1; then
+  yum update -y
+  yum install -y docker
+else
+  echo "No supported package manager (apt-get / yum) found"
+  exit 1
 fi
+
+systemctl enable docker
+systemctl start docker
 
 BACKEND_IMAGE="${docker_backend_image}"
 FRONT_IMAGE="${docker_front_image}"
 
-docker rm -f secret-nick-api || true
+# 2. Чистим старые контейнеры, если есть
+docker rm -f secret-nick-api   || true
 docker rm -f secret-nick-front || true
 
-docker pull "$BACKEND_IMAGE" || true
-docker pull "$FRONT_IMAGE" || true
+# 3. Пуллим образы (если заданы)
+if [ -n "$BACKEND_IMAGE" ]; then
+  docker pull "$BACKEND_IMAGE" || true
+fi
+if [ -n "$FRONT_IMAGE" ]; then
+  docker pull "$FRONT_IMAGE" || true
+fi
 
+# 4. Поднимаем нужный контейнер в зависимости от имени инстанса
 case "${ec2_name}" in
   "dotnet")
     docker run -d --name secret-nick-api \
@@ -32,6 +46,6 @@ case "${ec2_name}" in
     ;;
 
   "angular")
-    # сюда можно потом добавить образ для Angular, если будет
+    # сюда можно позже добавить angular-образ
     ;;
 esac

@@ -81,7 +81,6 @@ resource "aws_instance" "this" {
   subnet_id                   = var.subnet
   vpc_security_group_ids      = var.sgs
 
-  # Скрипт user_data — запускаем Docker и нужный контейнер
   user_data = templatefile("${path.module}/user_data.sh", {
     docker_backend_image = var.docker_backend_image
     docker_front_image   = var.docker_front_image
@@ -90,7 +89,6 @@ resource "aws_instance" "this" {
     web_ui_port          = var.web_ui_port
   })
 
-  # чтобы при изменении user_data EC2 пересоздавался
   user_data_replace_on_change = true
 
   tags = merge(
@@ -99,12 +97,9 @@ resource "aws_instance" "this" {
   )
 }
 
-################################################################################
-# ALB Target group attachment
-################################################################################
-
 resource "aws_lb_target_group_attachment" "this" {
-  count = contains(["angular", "react", "dotnet"], var.ec2_name) ? 1 : 0
+  # создаём привязку только для наших трёх имён
+  count = contains(["angular", "react", "dotnet"], var.ec2_name) && var.target_group_arn != null ? 1 : 0
 
   target_group_arn = var.target_group_arn
   target_id        = aws_instance.this.id

@@ -43,7 +43,11 @@ module "ec2" {
   ami           = var.ami
   ec2_name      = each.key
   instance_type = var.instance_type
-  subnet        = module.vpc.vpc_subnet_ids["subnet0"]
+
+  # Берём первую публичную подсеть
+  subnet = module.vpc.vpc_subnet_ids["subnet0"]
+
+  # SG: dotnet → backend SG, остальное → web UI SG
   sgs = [
     each.key == "dotnet"
     ? module.security_groups.web_backend_security_group_id
@@ -54,22 +58,26 @@ module "ec2" {
   iam_role_description        = "IAM role for EC2 instance"
   iam_role_policies           = var.iam_role_policies
 
-  web_ui_port      = var.web_ui_port
-  web_backend_port = var.web_backend_port
+  # Порты на хосте
+  web_ui_port      = var.web_ui_port      # 80
+  web_backend_port = var.web_backend_port # 8080
 
+  # Порт для target group attachment
   port = each.key == "dotnet" ? var.web_backend_port : var.web_ui_port
 
+  # Привязка к нужному target group’у
   target_group_arn = (
     each.key == "angular" ? module.alb.web_ui_angular_target_group_arn :
-    each.key == "react"   ? module.alb.web_ui_react_target_group_arn :
-    each.key == "dotnet"  ? module.alb.backend_target_group_arn :
+    each.key == "react" ? module.alb.web_ui_react_target_group_arn :
+    each.key == "dotnet" ? module.alb.backend_target_group_arn :
     null
   )
 
   associate_public_ip_address = true
 
-  docker_backend_image = "pavlovaalla88/secret-nick-api:0.1.3"
-  docker_front_image   = "pavlovaalla88/secret-nick-front:0.1.3"
+  # Docker-образы: кому что
+  docker_backend_image = each.key == "dotnet" ? "pavlovaalla88/secret-nick-api:0.1.3" : ""
+  docker_front_image   = each.key == "react" ? "pavlovaalla88/secret-nick-front:0.1.3" : ""
 }
 
 ################################################################################

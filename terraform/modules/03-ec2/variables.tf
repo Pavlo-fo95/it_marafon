@@ -1,27 +1,20 @@
-################################################################################
-# Tags
-################################################################################
-
 variable "tags" {
   description = "A mapping of tags to assign to the resource"
   type        = map(string)
   default     = {}
 }
 
-################################################################################
-# Instance
-################################################################################
+# ---------------- EC2 ----------------
 
 variable "ami" {
   description = "ID of AMI to use for the instance"
   type        = string
-  default     = null
 }
 
 variable "associate_public_ip_address" {
   description = "Whether to associate a public IP address with an instance in a VPC"
   type        = bool
-  default     = null
+  default     = true
 }
 
 variable "availability_zone" {
@@ -31,7 +24,7 @@ variable "availability_zone" {
 }
 
 variable "iam_instance_profile" {
-  description = "IAM Instance Profile to launch the instance with. Specified as the name of the Instance Profile"
+  description = "Existing IAM Instance Profile name (if create_iam_instance_profile = false)"
   type        = string
   default     = null
 }
@@ -42,22 +35,13 @@ variable "instance_type" {
 }
 
 variable "ec2_name" {
-  description = "Name to be used on EC2 instance created (react / angular / dotnet)"
+  description = "Name to be used on EC2 instance created"
   type        = string
-  default     = ""
-}
-
-# Это в модуле не используется, но можно оставить для совместимости
-variable "ec2_name_set" {
-  description = "Set of names for EC2 VMs"
-  type        = set(string)
-  default     = []
 }
 
 variable "sgs" {
   description = "Security Groups ids"
   type        = list(string)
-  default     = [""]
 }
 
 variable "subnet" {
@@ -65,12 +49,10 @@ variable "subnet" {
   type        = string
 }
 
-################################################################################
-# IAM Role / Instance Profile
-################################################################################
+# ---------------- IAM role ----------------
 
 variable "create_iam_instance_profile" {
-  description = "Determines whether an IAM instance profile is created or to use an existing IAM instance profile"
+  description = "Create IAM instance profile"
   type        = bool
   default     = false
 }
@@ -82,7 +64,7 @@ variable "iam_role_name" {
 }
 
 variable "iam_role_use_name_prefix" {
-  description = "Determines whether the IAM role name (`iam_role_name` or `name`) is used as a prefix"
+  description = "Use name as prefix for IAM role"
   type        = bool
   default     = true
 }
@@ -100,13 +82,13 @@ variable "iam_role_description" {
 }
 
 variable "iam_role_permissions_boundary" {
-  description = "ARN of the policy that is used to set the permissions boundary for the IAM role"
+  description = "ARN of permissions boundary policy"
   type        = string
   default     = null
 }
 
 variable "iam_role_tags" {
-  description = "A map of additional tags to add to the IAM role/profile created"
+  description = "Additional tags for IAM role/profile"
   type        = map(string)
   default     = {}
 }
@@ -117,25 +99,21 @@ variable "iam_role_policies" {
   default     = {}
 }
 
-################################################################################
-# Ports / Target group
-################################################################################
+# ---------------- Ports / TG ----------------
 
 variable "web_ui_port" {
-  description = "Port for Web UI service (React / Angular)"
+  description = "Port for Web UI service (host + target group)"
   type        = number
 }
 
 variable "web_backend_port" {
-  description = "Port for the web backend service"
+  description = "Port for backend service (host + target group)"
   type        = number
-  default     = 8080
 }
 
 variable "port" {
-  description = "Port used in the target group attachment"
+  description = "Port used in target group attachment/health checks"
   type        = number
-  default     = 3000
 }
 
 variable "target_group_arn" {
@@ -144,16 +122,16 @@ variable "target_group_arn" {
   default     = null
 }
 
-################################################################################
-# Docker images
-################################################################################
+# ---------------- Docker images ----------------
 
 variable "docker_backend_image" {
-  description = "Backend Docker image"
+  description = "Backend Docker image (e.g. pavlovaalla88/secret-nick-api:0.1.3)"
   type        = string
+  default     = ""
 }
 
 variable "docker_front_image" {
-  description = "Frontend Docker image"
+  description = "Frontend Docker image (e.g. pavlovaalla88/secret-nick-front:0.1.3)"
   type        = string
+  default     = ""
 }
