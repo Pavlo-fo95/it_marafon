@@ -43,11 +43,13 @@ jobs:
       - name: Push backend image
         run: docker push pavlovaalla88/secret-nick-api:${{ env.IMAGE_TAG }}
 
-      - name: Build frontend image
+      - name: Build frontend image (react)
         run: |
           docker build \
             -t pavlovaalla88/secret-nick-front:${{ env.IMAGE_TAG }} \
             -f frontend/react/Dockerfile \
+            --build-arg VITE_ENV=production \
+            --build-arg VITE_API_URL="http://app-alb-1273436763.eu-central-1.elb.amazonaws.com" \
             frontend/react
 
       - name: Push frontend image
