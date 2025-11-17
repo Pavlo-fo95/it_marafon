@@ -1,5 +1,11 @@
 FROM node:22.16.0 AS build
+
 ARG VITE_ENV=development
+ARG VITE_API_URL
+
+ENV VITE_ENV=$VITE_ENV
+ENV VITE_API_URL=$VITE_API_URL
+
 WORKDIR /app
 COPY package*.json ./
 RUN npm install

@@ -3,7 +3,8 @@ import config from "../../config.json";
 
 const { protocol, host } = window.location;
 
-export const BASE_API_URL = config?.environment?.backendApiUrl;
+export const BASE_API_URL =
+  import.meta.env.VITE_API_URL || config?.environment?.backendApiUrl;
 export const BASE_FRONTEND_URL = `${protocol}//${host}`;
 export const MAX_PARTICIPANTS_NUMBER = 20;
 
@@ -38,7 +39,6 @@ export const formatBudget = (budget?: number) => {
   if (budget === 0) return "Unlimited";
   return `${budget} UAH`;
 };
-
 export const copyToClipboard = (contentToCopy: string) =>
   navigator.clipboard.writeText(contentToCopy);
 
