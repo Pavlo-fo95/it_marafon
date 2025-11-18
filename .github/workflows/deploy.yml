@@ -49,7 +49,7 @@ jobs:
             -t pavlovaalla88/secret-nick-front:${{ env.IMAGE_TAG }} \
             -f frontend/react/Dockerfile \
             --build-arg VITE_ENV=production \
-            --build-arg VITE_API_URL="http://app-alb-1273436763.eu-central-1.elb.amazonaws.com" \
+            --build-arg VITE_API_URL="http://18.192.63.4:8080"
             frontend/react
 
       - name: Push frontend image
