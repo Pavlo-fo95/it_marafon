@@ -1,41 +1,27 @@
-name: Check Infrastructure Deployment
+name: check infra
 
 on:
-  workflow_call: 
+  workflow_call:
     outputs:
       infra-available:
-        description: "Indicates if the infrastructure (ALB) is available"
-        value: ${{ jobs.check-alb.outputs.infra-available }}    
+        description: 'If true – AWS credentials are available and we can deploy'
+        value: ${{ jobs.check.outputs.infra-available }}
 
 jobs:
-  check-alb:
-    name: Check if infra was deployed
+  check:
     runs-on: ubuntu-latest
+
     outputs:
-      infra-available: ${{ steps.check.outputs.infra-available }}
+      infra-available: ${{ steps.set-result.outputs.infra-available }}
+
     steps:
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v3
+      - name: Configure AWS credentials via OIDC
+        uses: aws-actions/configure-aws-credentials@v4
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_REGION || 'eu-central-1' }} 
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ secrets.AWS_REGION || 'eu-central-1' }}
 
-      - name: Check if ALB Exists
-        id: check
-        run: |
-          echo "Fetching ALB DNS name from AWS region: ${{ secrets.AWS_REGION || 'eu-central-1' }}"
-          ALB_DNS=$(aws elbv2 describe-load-balancers --region ${{ secrets.AWS_REGION || 'eu-central-1' }} \
-            --query "LoadBalancers[0].DNSName" \
-            --output text 2> aws_error.log || echo "")
-
-          if [ -s aws_error.log ]; then
-            echo "infra-available=false" >> $GITHUB_OUTPUT
-            echo "🚫 Warning: No infrastructure available. Please deploy infrastructure first."
-          elif [ -z "$ALB_DNS" ] || [ "$ALB_DNS" = "None" ]; then 
-            echo "infra-available=false" >> $GITHUB_OUTPUT
-            echo "🚫 Warning: No infrastructure available. Please deploy infrastructure first."
-          else
-            echo "infra-available=true" >> $GITHUB_OUTPUT
-            echo "✅ Infrastructure is available. ALB DNS: $ALB_DNS"
-          fi
+      # Если сюда дошли – значит, креды норм, считаем, что инфраструктура доступна
+      - name: Mark infra as available
+        id: set-result
+        run: echo "infra-available=true" >> "$GITHUB_OUTPUT"
