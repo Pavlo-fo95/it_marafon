@@ -35,7 +35,7 @@ module "security_groups" {
 
 # resource "aws_key_pair" "new_marafon_key" {
 #   key_name   = "new-marafon-key"
-#   public_key = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQCv2pXkdKtnbU6L8pAdckTRrz9RdNyXZkKFQK3aqIV+mvbEx/8s4Qj3BU1cs2Hxo3lYLJtSbiRx03aAIblztCksVtFtjifLcoqc/AaP3MiaUOMpL84oyydKldmcwmIERaf4TXMpxaczP3DBGbo5yPx3SJacYRV6yPVggyCkUc0XFJwWXd3/kiJ7eELo+6cYBNOKGDEV2yx8Uqs2CZ19lj1lwA/BMxvndNkSRGKbv6XMVfYeSmXWl0jNNzz1q8oxxMiypoW+DGe7vxU7YUJIT6hPybNtvNQOv0eUASQp3bIbllhic873po69CQ/pYwksX4uZYr4ADq3ucv0/I2s0fZzMTxOmuWgfrQXgLmWTwiEmRKVcyVSh98NuBiIklHdRyynsAxujNk/7G5UodUKNQ4/0tsIrvCSfe9BS98thhZZIO0ZeZIxSB08wf2F3+qaq33Ozt6EcJb7R0sAKI9h61reNn884y1xNPfjWYjizazcg3tEsi/+USnEaJm7xRzjqgyLvoVKJiqg0//ocN6hgbJSRmiiHy5PZDpDInWbCJrk6leuC26bHrzESqNZhReBq3pr5Zs1BAveHfwY+ltbOOwSt6dcEmMrjfRQuMB8A7YtlUHOtxQEK+PiqrbQEUncZwyJr2oCxyyhBxosauasEL/opl/B1PKx5O4Jq91WVpyUAgw== pavlo@DESKTOP-AF2ND4E"
+#   public_key = file("/home/pavlo/new-marafon-key.pub")
 # }
 
 ################################################################################
@@ -86,8 +86,6 @@ module "ec2" {
   docker_backend_image = each.key == "dotnet" ? "pavlovaalla88/secret-nick-api:0.1.3" : ""
   docker_front_image   = each.key == "react" ? "pavlovaalla88/secret-nick-front:0.1.3" : ""
 
-  # ⭐ вот тут передаём key pair во все EC2
-  key_name = aws_key_pair.new_marafon_key.key_name
 }
 
 ################################################################################
