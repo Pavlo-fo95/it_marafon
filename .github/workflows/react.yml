@@ -6,15 +6,15 @@ on:
       - main
     paths:
       - 'frontend/react/**'
-  pull_request:   
+  pull_request:
     branches:
-        - main
+      - main
     paths:
-      - 'frontend/react/**'      
+      - 'frontend/react/**'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref_name }}
-  cancel-in-progress: true        
+  cancel-in-progress: true
 
 jobs:
   test:
@@ -26,7 +26,7 @@ jobs:
     secrets: inherit
 
   check-infra:
-    uses: ./.github/workflows/check-infra.yml   
+    uses: ./.github/workflows/check-infra.yml
     secrets: inherit
   
   build:
@@ -39,6 +39,9 @@ jobs:
     uses: ./.github/workflows/build-and-push.yml
     with:
       microservice: react
+      image_tag: latest
+      vite_env: production
+      api_url: http://54.93.106.192:8080
     secrets: inherit
 
   deploy:
@@ -48,4 +51,4 @@ jobs:
     with:
       microservice: react
       image_tag: latest
-    secrets: inherit  
+    secrets: inherit

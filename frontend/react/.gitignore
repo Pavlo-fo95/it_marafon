@@ -25,3 +25,12 @@ dist-ssr
 
 # Husky
 ./husky/_
+
+*.png
+*.jpg
+*.jpeg
+*.mp4
+*.docx
+*.txt
+AWS account.txt
+README марафон.txt

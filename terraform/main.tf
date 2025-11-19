@@ -19,16 +19,23 @@ module "security_groups" {
   vpc_id      = module.vpc.vpc_id
   name_prefix = var.project_name
 
-  # Ports
   web_backend_port = var.web_backend_port
   web_ui_port      = var.web_ui_port
   rds_port         = var.rds_port
 
-  # ALB ingress
   alb_ingress_ports = var.alb_ingress_ports
   alb_ingress_cidr  = var.alb_ingress_cidr
 
   tags = var.tags
+}
+
+################################################################################
+# SSH Key Pair
+################################################################################
+
+resource "aws_key_pair" "new_marafon_key" {
+  key_name   = "new-marafon-key"
+  public_key = file("/home/pavlo/new-marafon-key.pub")
 }
 
 ################################################################################
@@ -47,7 +54,7 @@ module "ec2" {
   # Берём первую публичную подсеть
   subnet = module.vpc.vpc_subnet_ids["subnet0"]
 
-  # SG: dotnet → backend SG, остальное → web UI SG
+  # SG: dotnet → backend SG, остальные → web UI SG
   sgs = [
     each.key == "dotnet"
     ? module.security_groups.web_backend_security_group_id
@@ -58,9 +65,9 @@ module "ec2" {
   iam_role_description        = "IAM role for EC2 instance"
   iam_role_policies           = var.iam_role_policies
 
-  # Порты на хосте
-  web_ui_port      = var.web_ui_port      # 80
-  web_backend_port = var.web_backend_port # 8080
+  # Порты
+  web_ui_port      = var.web_ui_port
+  web_backend_port = var.web_backend_port
 
   # Порт для target group attachment
   port = each.key == "dotnet" ? var.web_backend_port : var.web_ui_port
@@ -75,9 +82,12 @@ module "ec2" {
 
   associate_public_ip_address = true
 
-  # Docker-образы: кому что
+  # Docker-образы
   docker_backend_image = each.key == "dotnet" ? "pavlovaalla88/secret-nick-api:0.1.3" : ""
   docker_front_image   = each.key == "react" ? "pavlovaalla88/secret-nick-front:0.1.3" : ""
+
+  # ⭐ вот тут передаём key pair во все EC2
+  key_name = aws_key_pair.new_marafon_key.key_name
 }
 
 ################################################################################

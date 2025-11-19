@@ -135,3 +135,9 @@ variable "docker_front_image" {
   type        = string
   default     = ""
 }
+
+variable "key_name" {
+  description = "Name of the SSH key pair"
+  type        = string
+  default     = null
+}

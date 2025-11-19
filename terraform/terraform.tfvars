@@ -34,5 +34,15 @@ iam_role_policies = {
 }
 
 # RDS / Flags
-enable_rds = false
+enable_rds = true
+
+db_id                 = "postgres-db"
+db_username           = "postgres"
+db_password           = "543"
+db_engine             = "postgres"
+db_engine_version     = "17.5"
+db_storage_size       = 20
+db_instance_class     = "db.t3.micro"
+db_subnet_group_name  = "rds-private-subnet-group"
+
 enable_alb = true

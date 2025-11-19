@@ -80,6 +80,7 @@ resource "aws_instance" "this" {
   instance_type               = var.instance_type
   subnet_id                   = var.subnet
   vpc_security_group_ids      = var.sgs
+  key_name                    = var.key_name   # ⭐ только ОДНА строка
 
   user_data = templatefile("${path.module}/user_data.sh", {
     docker_backend_image = var.docker_backend_image

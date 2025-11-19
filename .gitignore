@@ -55,3 +55,12 @@ resolve
 transferring
 sha256:*
 terraform/tfplan
+
+*.png
+*.jpg
+*.jpeg
+*.mp4
+*.docx
+*.txt
+AWS account.txt
+README марафон.txt
