@@ -7,30 +7,29 @@ on:
       microservice:
         required: true
         type: string
-        description: 'Target microservice (react, angular, dotnet)'
+        description: "Target microservice (react, angular, dotnet)"
       image_tag:
         required: false
         type: string
-        default: 'latest'
-        description: 'Docker image tag'
+        default: "latest"
+        description: "Docker image tag"
 
   workflow_dispatch:
     inputs:
       microservice:
-        description: 'Target microservice'
+        description: "Target microservice"
         required: true
         type: choice
         options:
           - react
           - angular
           - dotnet
-
       image_tag:
-        description: 'Docker image tag (default: latest)'
+        description: "Docker image tag (default: latest)"
         required: false
-        default: 'latest'
+        default: "latest"
         type: string
-        
+
 env:
   MICROSERVICE: ${{ inputs.microservice }}
   IMAGE_TAG: ${{ inputs.image_tag || 'latest' }}
@@ -40,45 +39,50 @@ jobs:
   deploy:
     name: deploy ${{ inputs.microservice }}
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-     
-      - name: set environment variables
+
+      - name: Set environment variables
         id: vars
         uses: ./.github/actions/set-var
-        with:  
+        with:
           microservice: ${{ env.MICROSERVICE }}
           docker_hub_username: ${{ secrets.DOCKER_HUB_USERNAME }}
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_REGION || 'eu-central-1' }} 
-              
-              
+          aws-region: ${{ secrets.AWS_REGION || 'eu-central-1' }}
+
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v3
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_REGION || 'eu-central-1' }} 
-          
+          aws-region: ${{ secrets.AWS_REGION || 'eu-central-1' }}
+
       - name: Make scripts executable
-        run: chmod +x .github/scripts/get-ec2-instance.sh .github/scripts/deploy-container.sh .github/scripts/verify-deployment.sh
+        run: |
+          chmod +x .github/scripts/get-ec2-instance.sh
+          chmod +x .github/scripts/deploy-container.sh
+          chmod +x .github/scripts/verify-deployment.sh
 
       - name: Get EC2 instance ID
         run: .github/scripts/get-ec2-instance.sh
         shell: bash
         env:
           INSTANCE_NAME: ${{ env.INSTANCE_NAME }}
-           
+
       - name: Deploy Docker container via SSM
         run: .github/scripts/deploy-container.sh
-        shell: bash  
+        shell: bash
         env:
           REPO: ${{ env.REPO }}
           MICROSERVICE_NAME: ${{ env.MICROSERVICE }}
           IMAGE_TAG: ${{ env.IMAGE_TAG }}
-          INSTANCE_ID: ${{ env.INSTANCE_ID }} 
+          INSTANCE_ID: ${{ env.INSTANCE_ID }}
           CONTAINER_NAME: ${{ env.CONTAINER_NAME }}
           PORT: ${{ env.PORT }}
           DOCKER_USERNAME: ${{ secrets.DOCKER_HUB_USERNAME }}
@@ -86,12 +90,12 @@ jobs:
 
       - name: Verify deployment
         run: .github/scripts/verify-deployment.sh
-        shell: bash  
+        shell: bash
         env:
           INSTANCE_ID: ${{ env.INSTANCE_ID }}
           CONTAINER_NAME: ${{ env.CONTAINER_NAME }}
-                  
+
       - name: Notify about successful deployment
         if: success()
         run: |
-          echo "::notice::Successfully deployed ${MICROSERVICE_NAME} image with tag ${IMAGE_TAG} to port ${PORT}"
+          echo "::notice::Successfully deployed ${MICROSERVICE} image with tag ${IMAGE_TAG} to port ${PORT}"
