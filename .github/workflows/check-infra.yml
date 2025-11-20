@@ -4,17 +4,28 @@ on:
   workflow_call:
     outputs:
       infra-available:
-        description: 'If true – AWS is assumed available'
+        description: 'If true – AWS credentials are available and we can deploy'
         value: ${{ jobs.check.outputs.infra-available }}
 
 jobs:
   check:
     runs-on: ubuntu-latest
 
+    # важно для OIDC!
+    permissions:
+      id-token: write
+      contents: read
+
     outputs:
       infra-available: ${{ steps.set-result.outputs.infra-available }}
 
     steps:
-      - name: Mark infra as available (no AWS check)
+      - name: Configure AWS credentials via OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ secrets.AWS_REGION || 'eu-central-1' }}
+
+      - name: Mark infra as available
         id: set-result
         run: echo "infra-available=true" >> "$GITHUB_OUTPUT"
