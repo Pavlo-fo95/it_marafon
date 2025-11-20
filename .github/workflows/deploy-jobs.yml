@@ -7,27 +7,28 @@ on:
       microservice:
         required: true
         type: string
-        description: "Target microservice (react, angular, dotnet)"
+        description: 'Target microservice (react, angular, dotnet)'
       image_tag:
         required: false
         type: string
-        default: "latest"
-        description: "Docker image tag"
+        default: 'latest'
+        description: 'Docker image tag'
 
   workflow_dispatch:
     inputs:
       microservice:
-        description: "Target microservice"
+        description: 'Target microservice'
         required: true
         type: choice
         options:
           - react
           - angular
           - dotnet
+
       image_tag:
-        description: "Docker image tag (default: latest)"
+        description: 'Docker image tag (default: latest)'
         required: false
-        default: "latest"
+        default: 'latest'
         type: string
 
 env:
@@ -39,8 +40,6 @@ jobs:
   deploy:
     name: deploy ${{ inputs.microservice }}
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
 
     steps:
       - name: Checkout repository
@@ -64,10 +63,7 @@ jobs:
           aws-region: ${{ secrets.AWS_REGION || 'eu-central-1' }}
 
       - name: Make scripts executable
-        run: |
-          chmod +x .github/scripts/get-ec2-instance.sh
-          chmod +x .github/scripts/deploy-container.sh
-          chmod +x .github/scripts/verify-deployment.sh
+        run: chmod +x .github/scripts/get-ec2-instance.sh .github/scripts/deploy-container.sh .github/scripts/verify-deployment.sh
 
       - name: Get EC2 instance ID
         run: .github/scripts/get-ec2-instance.sh
@@ -97,5 +93,4 @@ jobs:
 
       - name: Notify about successful deployment
         if: success()
-        run: |
-          echo "::notice::Successfully deployed ${MICROSERVICE} image with tag ${IMAGE_TAG} to port ${PORT}"
+        run: echo "::notice::Successfully deployed ${MICROSERVICE_NAME}:${IMAGE_TAG} to EC2"
