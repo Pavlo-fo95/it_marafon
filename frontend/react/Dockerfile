@@ -8,20 +8,25 @@ RUN npm ci
 
 COPY . .
 
-# Vite сам подхватит VITE_API_URL из .env.production
+ARG VITE_API_URL
+ENV VITE_API_URL=${VITE_API_URL}
+
+ARG VITE_ENV
+ENV VITE_ENV=${VITE_ENV}
+
+# Vite подхватит VITE_API_URL как import.meta.env.VITE_API_URL
 RUN npm run build
 
+# -------- runtime --------
 FROM alpine:3.21
 
 RUN apk update && apk add --no-cache nginx bash curl netcat-openbsd
 
 COPY --from=build /app/dist /usr/share/nginx/html
-
 COPY nginx.conf /etc/nginx/http.d/default.conf
 
 HEALTHCHECK --interval=30s --timeout=10s --retries=3 \
   CMD curl -f http://localhost:80/ || exit 1
 
 EXPOSE 80
-
 CMD ["nginx", "-g", "daemon off;"]
