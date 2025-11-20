@@ -1,4 +1,4 @@
-// NOTE: updated BASE_API_URL for AWS backend
+// NOTE: updated BASE_API_URL for AWS
 import type { ShowToaster } from "@components/common/toaster/types";
 import config from "../../config.json";
 
