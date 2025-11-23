@@ -19,7 +19,8 @@ on:
       api_url:
         type: string
         required: false
-        default: "http://localhost:8080"
+        # CHANGED: по умолчанию собираем уже с реальным бекендом
+        default: "http://54.93.106.192:8080"
 
   workflow_dispatch:
     inputs:
@@ -42,7 +43,8 @@ on:
       api_url:
         description: 'VITE_API_URL'
         required: false
-        default: "http://localhost:8080"
+        # CHANGED: то же самое значение по умолчанию для ручного запуска
+        default: "http://54.93.106.192:8080"
 
 jobs:
   build-and-push:
