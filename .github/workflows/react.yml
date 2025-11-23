@@ -30,19 +30,19 @@ jobs:
     secrets: inherit
   
   build:
-    needs: check-infra
-    if: github.event_name == 'push' && needs.check-infra.outputs.infra-available == 'true'
-    name: Build React Docker Image
-    permissions:
-      contents: read
-      pull-requests: read
-    uses: ./.github/workflows/build-and-push.yml
-    with:
-      microservice: react
-      image_tag: latest
-      vite_env: production
-      api_url: http://54.93.106.192:8080
-    secrets: inherit
+      needs: check-infra
+      if: github.event_name == 'push' && needs.check-infra.outputs.infra-available == 'true'
+      name: Build React Docker Image
+      permissions:
+        contents: read
+        pull-requests: read
+      uses: ./.github/workflows/build-and-push.yml
+      with:
+        microservice: react
+        image_tag: latest
+        vite_env: production
+        api_url: "http://54.93.106.192:8080"    
+      secrets: inherit
 
   deploy:
     needs: [check-infra, build]
