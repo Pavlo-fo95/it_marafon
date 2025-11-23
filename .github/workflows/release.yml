@@ -1,124 +1,117 @@
-name: release create
+name: release deploy
 
 on:
   workflow_dispatch:
-    inputs:
-      bump:
-        description: 'Version bump type'
-        required: true
-        type: choice
-        options:
-          - patch
-          - minor
-          - major
 
 jobs:
-  create-release:
-    permissions:
-      contents: write
-      pull-requests: write
+  get-latest-tag:
     runs-on: ubuntu-latest
+    outputs:
+      latest_tag: ${{ steps.get_tag.outputs.tag }}
+      tag_version: ${{ steps.get_tag.outputs.version }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          ref: main
-          token: ${{ secrets.ACTIONS_PAT }}
-          
-      - name: Verify versions
-        id: current_version
+
+      - name: Get latest tag
+        id: get_tag
         run: |
-          ANGULAR_VERSION=$(node -p "require('./frontend/angular/package.json').version")
-          REACT_VERSION=$(node -p "require('./frontend/react/package.json').version")
-          BACKEND_VERSION=$(grep "^ARG VERSION_PREFIX=" backend/ApiService/Dockerfile | head -n 1 | cut -d= -f2)
+          LATEST_TAG=$(git describe --tags --abbrev=0)
+          TAG_VERSION=${LATEST_TAG#v}
+          echo "Latest tag: $LATEST_TAG"
+          echo "Tag version: $TAG_VERSION"
+          echo "tag=$LATEST_TAG" >> "$GITHUB_OUTPUT"
+          echo "version=$TAG_VERSION" >> "$GITHUB_OUTPUT"
+
+  verify-images:
+    runs-on: ubuntu-latest
+    needs: get-latest-tag
+    steps:
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Verify Docker images exist
+        run: |
+          echo "Verifying that Docker images with tag ${{ needs.get-latest-tag.outputs.tag_version }} exist..."
           
-          echo "Angular version: $ANGULAR_VERSION"
-          echo "React version: $REACT_VERSION"
-          echo "Backend version: $BACKEND_VERSION"
+          SERVICES=("react" "angular" "dotnet")
+          for service in "${SERVICES[@]}"; do
+            IMAGE="${{ secrets.DOCKERHUB_USERNAME }}/${service}:${{ needs.get-latest-tag.outputs.tag_version }}"
+            echo "Checking if $IMAGE exists..."
+            
+            if docker manifest inspect "$IMAGE" > /dev/null 2>&1; then
+              echo "Image $IMAGE exists"
+            else
+              echo "Image $IMAGE does not exist"
+              echo "::error::Docker image $IMAGE was not found. Make sure the individual service pipelines completed successfully."
+              exit 1
+            fi
+          done
           
-          if [ "$ANGULAR_VERSION" != "$REACT_VERSION" ]; then
-            echo "Error: Version mismatch between Angular ($ANGULAR_VERSION) and React ($REACT_VERSION) projects"
-            echo "Please ensure both package.json files have the same version before creating a release"
-            exit 1
+          echo "All Docker images verified successfully!"
+
+  deploy:
+    needs: [get-latest-tag, verify-images]
+    uses: ./.github/workflows/auto-deploy.yml
+    with:
+      tag: ${{ needs.get-latest-tag.outputs.tag_version }}
+    secrets: inherit
+
+  create-github-release:
+    runs-on: ubuntu-latest
+    needs: [get-latest-tag, verify-images, deploy]
+    permissions:
+      contents: write
+    if: success()
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ needs.get-latest-tag.outputs.latest_tag }}
+    
+      - name: Set release variables
+        id: vars
+        run: |
+          echo "VERSION=${{ needs.get-latest-tag.outputs.tag_version }}" >> $GITHUB_ENV
+          echo "DOCKERHUB_USERNAME=${{ secrets.DOCKERHUB_USERNAME }}" >> $GITHUB_ENV
+
+      - name: Generate Changelog
+        id: changelog
+        run: |
+          VERSION="${{ needs.get-latest-tag.outputs.latest_tag }}"
+
+          LAST_TAG=$(git describe --tags --abbrev=0 --exclude="$VERSION" 2>/dev/null || echo "")
+          
+          if [ -z "$LAST_TAG" ]; then
+            CHANGELOG=$(git log --pretty=format:"- %s (%h)" --no-merges | head -10)
+          else
+            CHANGELOG=$(git log "$LAST_TAG..$VERSION" --pretty=format:"- %s (%h)" --no-merges)
           fi
           
-          if [ "$ANGULAR_VERSION" != "$BACKEND_VERSION" ]; then
-            echo "Error: Version mismatch between Frontend ($ANGULAR_VERSION) and Backend ($BACKEND_VERSION)"
-            echo "Please ensure all services have the same version before creating a release"
-            exit 1
-          fi
-          
-          echo "Current version: $ANGULAR_VERSION"
-          echo "current_version=$ANGULAR_VERSION" >> "$GITHUB_OUTPUT"
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+          {
+            echo "CHANGELOG<<EOF"
+            echo "$CHANGELOG"
+            echo "EOF"
+          } >> "$GITHUB_ENV"
+    
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
         with:
-          node-version: '22.16.0'
-
-      - name: Update versions
-        id: version
-        run: |
-          # Bump version in Angular package.json and get new version
-          cd frontend/angular
-          echo "Bumping version in Angular package.json..."
-          npm --no-git-tag-version version "${{ inputs.bump }}"
-          NEW_VERSION=$(node -p "require('./package.json').version")
-          cd - > /dev/null
-          
-          echo "Updating version to $NEW_VERSION in all projects..."
-          
-          # Update React package.json
-          cd frontend/react
-          echo "Updating React package.json..."
-          npm version "$NEW_VERSION" --no-git-tag-version --allow-same-version
-          cd - > /dev/null
-          
-          # Update VERSION_PREFIX in Dockerfile
-          echo "Updating VERSION_PREFIX in Dockerfile..."
-          sed -i "s/^ARG VERSION_PREFIX=.*/ARG VERSION_PREFIX=$NEW_VERSION/" backend/ApiService/Dockerfile
-
-          # Clean up version (remove v prefix if present)
-          CLEAN_VERSION=$(echo "$NEW_VERSION" | sed 's/^v//')
-          
-          echo "Version bumped to: $CLEAN_VERSION" >&2
-          echo "new_version=$CLEAN_VERSION" >> "$GITHUB_OUTPUT"
-
-      - name: Create Pull Request
-        id: create_pr
-        uses: peter-evans/create-pull-request@v5
-        with:
-          token: ${{ secrets.ACTIONS_PAT }}
-          branch: "release/v${{ steps.version.outputs.new_version }}"
-          base: main
-          title: "release/v${{ steps.version.outputs.new_version }}"
+          tag_name: "${{ needs.get-latest-tag.outputs.latest_tag }}"
+          name: "Release ${{ needs.get-latest-tag.outputs.latest_tag }}"
           body: |
-            ## Release v${{ steps.version.outputs.new_version }}
+            ## Release ${{ needs.get-latest-tag.outputs.latest_tag }}
             
-            This PR updates the version across all services:
-            - Angular: v${{ steps.version.outputs.new_version }}
-            - React: v${{ steps.version.outputs.new_version }}
-            - .NET API: v${{ steps.version.outputs.new_version }}
-            
-            **What happens after merge:**
-            - Individual service pipelines (angular.yml, backend.yml, react.yml) will build Docker images with v${{ steps.version.outputs.new_version }} tag
-            - Use the post-release workflow manually to deploy the release and create GitHub Release
-            
-            Please review and merge to trigger the build and release process.
-          commit-message: "release/v${{ steps.version.outputs.new_version }}"
-          add-paths: |
-            frontend/angular/package.json
-            frontend/react/package.json
-            backend/ApiService/Dockerfile
+            ### Docker Images
+            Docker images with tag ${{ needs.get-latest-tag.outputs.tag_version }} were already built by individual service pipelines:
+            - `${{ env.DOCKERHUB_USERNAME }}/react:${{ needs.get-latest-tag.outputs.tag_version }}`
+            - `${{ env.DOCKERHUB_USERNAME }}/angular:${{ needs.get-latest-tag.outputs.tag_version }}`
+            - `${{ env.DOCKERHUB_USERNAME }}/dotnet:${{ needs.get-latest-tag.outputs.tag_version }}`
           draft: false
-          delete-branch: true
-
-      - name: Create Git Tag
-        if: steps.create_pr.outputs.pull-request-number != ''
-        run: |
-          TAG_NAME="v${{ steps.version.outputs.new_version }}"
-          git config --local user.email "github-actions[bot]@users.noreply.github.com"
-          git config --local user.name "github-actions[bot]"
-          git tag "$TAG_NAME"
-          git push origin "$TAG_NAME"
+          prerelease: false

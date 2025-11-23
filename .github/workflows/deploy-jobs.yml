@@ -80,8 +80,8 @@ jobs:
           INSTANCE_ID: ${{ env.INSTANCE_ID }}
           CONTAINER_NAME: ${{ env.CONTAINER_NAME }}
           PORT: ${{ env.PORT }}
-          DOCKER_USERNAME: ${{ secrets.DOCKER_HUB_USERNAME }}
-          DOCKER_PASSWORD: ${{ secrets.DOCKER_HUB_TOKEN }}
+          DOCKER_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          DOCKER_PASSWORD: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Verify deployment
         run: .github/scripts/verify-deployment.sh
